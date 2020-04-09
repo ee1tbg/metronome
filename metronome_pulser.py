@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import RPi.GPIO as GPIO
 import time
+import metronome_main
 
 LedPin = 18
 
@@ -14,23 +15,23 @@ def setup():
 	p.start(0)                     # Duty Cycle = 0
 
 def loop():
+        secondToIncrement = 100
+        tempoBPM = 120.
+        tempoSPB = 60. / tempoBPM
+        timeOn = tempoSPB / 100. # in sec
+        percentPWIcrementOn = timeOn * secondToIncrement
+        timeOff = tempoSPB / 100. # in sec
+        percentPWIcrementOff = timeOff * secondToIncrement
+        
 	while True:
-		for dc in range(0, 101, 4):   # Increase duty cycle: 0~100
+		for dc in range(0, 101, 20):   # Increase duty cycle: 0~100
 			p.ChangeDutyCycle(dc)     # Change duty cycle
 			time.sleep(0.05)
-		time.sleep(1)
-		for dc in range(100, -1, -4): # Decrease duty cycle: 100~0
+		time.sleep(.1)
+		for dc in range(100, -1, -5): # Decrease duty cycle: 100~0
 			p.ChangeDutyCycle(dc)
 			time.sleep(0.05)
-		time.sleep(1)
+		time.sleep(.1)
 
 def destroy():
 	p.stop()
-	GPIO.cleanup()
-
-if __name__ == '__main__':     # Program start from here
-	setup()
-	try:
-		loop()
-	except KeyboardInterrupt:  # When 'Ctrl+C' is pressed, the child program destroy() will be  executed.
-		destroy()

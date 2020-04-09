@@ -2,30 +2,29 @@
 
 import RPi.GPIO as GPIO
 import time
-import LED_Cycler_main
-from LED_Cycler_main import currentLedMode
+import metronome_main
 
-defaultPins = LED_Cycler_main.pins
+defaultPins = metronome_main.pins
 tempPins = defaultPins
 modeID = 0
-lcurrentLedMode = [0,"modeOff"]
-lpreviousLedMode = [0,"modeOff"]
+lcurrentMetMode = [0,"modeOff"]
+lpreviousMetMode = [0,"modeOff"]
 firstRep = False
-debugMode = LED_Cycler_main.debugMode
-tempoInSec = 100/60.
+debugMode = metronome_main.debugMode
+tempoInSecPerBeep = 100/60.
 
-def modes_manager(currentLedModeFromMain, tempoInSecFromMain):
-	global lcurrentLedMode
-	lcurrentLedMode = currentLedModeFromMain
-	global lpreviousLedMode
+def modes_manager(currentMetModeFromMain, tempoInSecPerBeepFromMain):
+	global lcurrentMetMode
+	lcurrentMetMode = currentMetModeFromMain
+	global lpreviousMetMode
 	global firstRep
-	global tempoInSec
-	tempoInSec = tempoInSecFromMain
-	print("modes_manager tempo in Seconds: " + str(tempoInSec))
+	global tempoInSecPerBeep
+	tempoInSecPerBeep = tempoInSecPerBeepFromMain
+	print("modes_manager tempo in Seconds: " + str(tempoInSecPerBeep))
 	if debugMode:#if debugging
-		print("lcurrentLedMode " + str(lcurrentLedMode))
-		print("lpreviousLedMode " + str(lpreviousLedMode))
-	firstRep = (lcurrentLedMode[0] is not lpreviousLedMode[0])
+		print("lcurrentMetMode " + str(lcurrentMetMode))
+		print("lpreviousMetMode " + str(lpreviousMetMode))
+	firstRep = (lcurrentMetMode[0] is not lpreviousMetMode[0])
 	if firstRep:	
 		print("FIRST" + str(functionModeMap[1]))
 	off()
@@ -34,72 +33,72 @@ def modes_manager(currentLedModeFromMain, tempoInSecFromMain):
 	insideout()
 	flashing()
 
-	lpreviousLedMode = lcurrentLedMode
+	lpreviousMetMode = lcurrentMetMode
 
 def off(pins = defaultPins):
 	modeID = 0
 	if debugMode:#if debugging
-		print("in use: " + str(lcurrentLedMode))
-	functionModeMap = [modeID, LED_Cycler_main.ledModesDict[modeID]]
-	if lcurrentLedMode[0] is functionModeMap[0]:
+		print("in use: " + str(lcurrentMetMode))
+	functionModeMap = [modeID, metronome_main.MetModesDict[modeID]]
+	if lcurrentMetMode[0] is functionModeMap[0]:
 		if firstRep:	
 			print(functionModeMap[1])
 		time.sleep(.1)
 		
 def flashing(pins = defaultPins):#flash all LEDS
 	modeID = 1
-	functionModeMap = [modeID, LED_Cycler_main.ledModesDict[modeID]]
-	if lcurrentLedMode[0] is functionModeMap[0]:
+	functionModeMap = [modeID, metronome_main.MetModesDict[modeID]]
+	if lcurrentMetMode[0] is functionModeMap[0]:
 		if firstRep:	
 			print(functionModeMap[1])
 		tempPins = defaultPins
 		GPIO.output(tempPins,GPIO.LOW)
-		#print("time on: " + str(tempoInSec))
-		time.sleep(tempoInSec / 2.)
+		#print("time on: " + str(tempoInSecPerBeep))
+		time.sleep(tempoInSecPerBeep / 2.)
 		GPIO.output(tempPins,GPIO.HIGH)
-		#print("time on: " + str(tempoInSec/2.))
-		time.sleep(tempoInSec / 2.)
+		#print("time on: " + str(tempoInSecPerBeep/2.))
+		time.sleep(tempoInSecPerBeep / 2.)
 
 
 def regular_loop(pins = defaultPins, override=False):
 	modeID = 2
-	functionModeMap = [modeID, LED_Cycler_main.ledModesDict[modeID]]
-	if lcurrentLedMode[0] is functionModeMap[0] or override is True:
+	functionModeMap = [modeID, metronome_main.MetModesDict[modeID]]
+	if lcurrentMetMode[0] is functionModeMap[0] or override is True:
 		if firstRep:	
 			print(functionModeMap[1])
 		tempPins = pins
 		for pin in tempPins:
 			GPIO.output(pin, GPIO.LOW)	
-			time.sleep(tempoInSec / len(pins) - .01)
-			print("time on: " + str(tempoInSec / len(pins) - .01))
+			time.sleep(tempoInSecPerBeep / len(pins) - .01)
+			print("time on: " + str(tempoInSecPerBeep / len(pins) - .01))
 			GPIO.output(pin, GPIO.HIGH)
 
 def slinky(pins = defaultPins, override=False):
 	modeID = 3
-	functionModeMap = [modeID, LED_Cycler_main.ledModesDict[modeID]]
-	if lcurrentLedMode[0] is functionModeMap[0] or override is True:
+	functionModeMap = [modeID, metronome_main.MetModesDict[modeID]]
+	if lcurrentMetMode[0] is functionModeMap[0] or override is True:
 		if firstRep:	
 			print(functionModeMap[1])
 		tempPins = pins
 		for pin in tempPins:
 			GPIO.output(pin, GPIO.LOW)
-			time.sleep(tempoInSec / len(pins) / 2)
+			time.sleep(tempoInSecPerBeep / len(pins) / 2)
 		for pin in tempPins:
 			GPIO.output(pin, GPIO.HIGH)
-			time.sleep(tempoInSec / len(pins) / 2)
+			time.sleep(tempoInSecPerBeep / len(pins) / 2)
 		
 		tempPins = [pins[-i-1] for i in range(len(pins))]
 		for pin in tempPins:
 			GPIO.output(pin, GPIO.LOW)
-			time.sleep(tempoInSec / len(pins) / 2)
+			time.sleep(tempoInSecPerBeep / len(pins) / 2)
 		for pin in tempPins:
 			GPIO.output(pin, GPIO.HIGH)
-			time.sleep(tempoInSec / len(pins) / 2)
+			time.sleep(tempoInSecPerBeep / len(pins) / 2)
 			
 def insideout(pins = defaultPins):
 	modeID = 4
-	functionModeMap = [modeID, LED_Cycler_main.ledModesDict[modeID]]
-	if lcurrentLedMode[0] is functionModeMap[0]:
+	functionModeMap = [modeID, metronome_main.MetModesDict[modeID]]
+	if lcurrentMetMode[0] is functionModeMap[0]:
 		if firstRep:	
 			print(functionModeMap[1])
 		# First define new pin list

@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 import RPi.GPIO as GPIO
 import time
-import LED_Cycler_modes
+import metronome_modes
+import metronome_pulser
 
 pins = [17, 18, 27, 22, 23, 24, 25, 13]
 buttonPin = 26
-ledModesDict = {0:"modeOff",1:"modeFlash", 2:"modeRegularLoop",3:"modeSlinky",4:"modeInsideOut"}
-defaultLedMode = [0, ledModesDict[0]]
-currentLedMode = defaultLedMode
+MetModesDict = {0:"modeOff",1:"modeFlash", 2:"modeRegularLoop",3:"modeSlinky",4:"modeInsideOut"}
+defaultMetMode = [0, MetModesDict[0]]
+currentMetMode = defaultMetMode
 #tempo = 100
-tempoInSec = 60. / 100
+tempoInSecPerBeep = 60. / 100
 debugMode = False
 '''DEBUG
-print(ledModesDict)
-print(defaultLedMode)
-print(currentLedMode)
+print(MetModesDict)
+print(defaultMetMode)
+print(currentMetMode)
 '''
 
 def setup():
@@ -27,34 +28,35 @@ def setup():
 
 		
 def determine_next_mode(ev=None):
-	currentLedMode[0] += 1 if currentLedMode[0] < (len(ledModesDict)-1)  else -(len(ledModesDict)-1) # reset to 0 if the next mode key is higher than the max in the dict
+	currentMetMode[0] += 1 if currentMetMode[0] < (len(MetModesDict)-1)  else -(len(MetModesDict)-1) # reset to 0 if the next mode key is higher than the max in the dict
 	if debugMode:#if debugging
-		print(currentLedMode[0])
-	currentLedMode[1] = ledModesDict[currentLedMode[0]] # define a list set to the current mode as defined in the dict - monitored by the cycler functions
-	print("updated to " + str(currentLedMode))
+		print(currentMetMode[0])
+	currentMetMode[1] = MetModesDict[currentMetMode[0]] # define a list set to the current mode as defined in the dict - monitored by the cycler functions
+	print("updated to " + str(currentMetMode))
 	time.sleep(2)
 		
 def loop():
 	GPIO.add_event_detect(buttonPin, GPIO.FALLING, callback=determine_next_mode, bouncetime=3000) # wait for falling and set bouncetime to prevent the callback function from being called multiple times when the button is pressed
 	while True:
 		if debugMode:#if debugging
-			print("in main loop: " + str(currentLedMode))
-		LED_Cycler_modes.modes_manager(currentLedMode, tempoInSec)
+			print("in main loop: " + str(currentMetMode))
+		metronome_modes.modes_manager(currentMetMode, tempoInSecPerBeep)
 		if debugMode:
 			time.sleep(.5)
 		
 
 def destroy():
+	metronome_pulser.destroy()		   # Stop pulser
 	for pin in pins:
 		GPIO.output(pin, GPIO.HIGH)    # turn off all leds
 	GPIO.cleanup()                     # Release resource
 
 if __name__ == '__main__':     # Program start from here
 	setup()
-	global tempoInSec
+	global tempoInSecPerBeep
 	try:
-		tempoInSec = 60. / input("Tempo in bpm: ")
-		print("Received tempo in Seconds: " + str(tempoInSec))
+		tempoInSecPerBeep = 60. / input("Tempo in bpm: ")
+		print("Received tempo in Seconds: " + str(tempoInSecPerBeep))
 		loop()
 	except KeyboardInterrupt:  # When 'Ctrl+C' is pressed, the child program destroy() will be  executed.
 		destroy()
